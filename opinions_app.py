@@ -4,12 +4,15 @@ from random import randrange
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
+
+# Переместим папку статики в static_dir (по умолчанию static)
+app = Flask(__name__, static_folder='static_dir')
 # Подключение БД SQLite:
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 # Создаём экземпляр класса SQLAlchemy и передаём в качестве параметра экземпляр
 # приложения Flask:
 db = SQLAlchemy(app)
+
 
 class Opinion(db.Model):
     # ID - целое число, первичный ключ:
