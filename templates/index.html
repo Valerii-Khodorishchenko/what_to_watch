@@ -9,7 +9,8 @@
     <link rel="icon" type="image/png" sizes="16x16" href="static/img/fav/favicon-16x16.png">
     <link rel="stylesheet" href="static/css/bootstrap.min.css">
     <link rel="stylesheet" href="static/css/style.css">
-    <title>Название фильма</title>
+    <!-- Из поля id выводится ID мнения -->
+    <title>Мнение о фильме # {{ opinion.id }}</title>
   </head>
   <body>	   
     <header class="pt-3">
@@ -38,21 +39,18 @@
     <main>   
       <section class="container my-5">
         <div class="row">
-          <h1>Название фильма</h1>
+          <!-- Из поля title выводится название фильма -->
+          <h1>{{ opinion.title }}</h1>
           <div class="col-12 col-lg-7 my-5">            
-            <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, 
-              sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-              Ut enim ad minim veniam, quis nostrud exercitation ullamco 
-              laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
-              dolor in reprehenderit in voluptate velit esse cillum dolore eu 
-              fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, 
-              sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
-            
+            <!-- Из поля text выводится текст мнения о фильме -->
+            <p>{{ opinion.text }}</p>
             <p>
               Больше о фильме: 
-              <a href=""></a>
+              <!-- Если в поле source... -->
+              {% if opinion.source %}
+              <!--...есть значения, то оно и выводится: -->
+                <a href="{{ opinion.source }}">{{ opinion.source }}</a>
+              {% else %} источник не указан {% endif %}
             </p>
             <p>
               Ссылка для друзей: 

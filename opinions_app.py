@@ -1,7 +1,7 @@
 from datetime import datetime
 from random import randrange
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -38,7 +38,8 @@ def index_view():
     offset_value = randrange(quantity)
     # ...и определяется случайный объект:
     opinion = Opinion.query.offset(offset_value).first()
-    return opinion.text
+    # Передаём в шаблон весь объект opinion:
+    return render_template('index.html', opinion=opinion)
 
 
 if __name__ == '__main__':
