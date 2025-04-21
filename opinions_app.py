@@ -50,5 +50,15 @@ def add_opinion_view():
     return render_template('add_opinion.html')
 
 
+# Тут указываем конвертер пути для id:
+@app.route('/opinions/<int:id>')
+# Параметром указываем имя переменной:
+def opinion_view(id):
+    # Теперь можно запросить нужный объект по id ...
+    opinion = Opinion.query.get(id)
+    # ... и передать его в шаблон (тот же что и для главной страницы):
+    return render_template('opinion.html', opinion=opinion)
+
+
 if __name__ == '__main__':
     app.run()
