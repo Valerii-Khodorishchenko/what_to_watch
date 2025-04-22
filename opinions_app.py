@@ -54,8 +54,11 @@ def add_opinion_view():
 @app.route('/opinions/<int:id>')
 # Параметром указываем имя переменной:
 def opinion_view(id):
+    # Если ожидается что id может не пресутствовать в db
+    # Метод get() заменяем на get_or_404():
     # Теперь можно запросить нужный объект по id ...
-    opinion = Opinion.query.get(id)
+    # opinion = Opinion.query.get(id)
+    opinion = Opinion.query.get_or_404(id)
     # ... и передать его в шаблон (тот же что и для главной страницы):
     return render_template('opinion.html', opinion=opinion)
 
