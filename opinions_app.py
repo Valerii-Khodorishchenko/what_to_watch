@@ -1,8 +1,13 @@
+import os
 from datetime import datetime
 from random import randrange
 
-from flask import Flask, render_template
+from flask import Flask, redirect, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
+# Импорты для формы
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, TextAreaField, URLField
+from wtforms.validators import DataRequired, Length, Optional, ValidationError
 
 
 # Переместим папку статики в static_dir (по умолчанию static)
@@ -11,6 +16,7 @@ app = Flask(__name__, static_folder='static_dir')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 # Создаём экземпляр класса SQLAlchemy и передаём в качестве параметра экземпляр
 # приложения Flask:
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
 db = SQLAlchemy(app)
 
 
@@ -29,6 +35,28 @@ class Opinion(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
 
+# Класс формы сразу после модели Opinion.
+class OpinionForm(FlaskForm):
+    title = StringField(
+        'Введите название фильма',
+        validators=[DataRequired(message='Обязательное поле'), Length(1, 128)]
+    )
+    text = TextAreaField(
+        'Напишите мнение',
+        validators=[DataRequired(message='Обязательное поле')]
+    )
+    source = URLField(
+        'Добавить ссылку на подробный обзор фильма',
+        validators=[Length(1, 256), Optional()]
+    )
+    submit = SubmitField('Добавить')
+
+    # Валидатор уникальности текста
+    def validate_text(self, field):
+        if Opinion.query.filter_by(text=field.data).first():
+            raise ValidationError('Такое мнение уже существует.')
+
+
 @app.route('/')
 def index_view():
     # Определяется количество мнений в базе данных:
@@ -45,9 +73,28 @@ def index_view():
     return render_template('opinion.html', opinion=opinion)
 
 
-@app.route('/add')
+@app.route('/add', methods=['GET', 'POST'])
 def add_opinion_view():
-    return render_template('add_opinion.html')
+    # Создаём экземпляр формы:
+    form = OpinionForm()
+    # Валидация отправленной формы. Если ошибок не возникло...
+    if form.validate_on_submit():
+        # ... то нужно создать новый экземпляр класса Opinion:
+        opinion = Opinion(
+            # И передавать в него данные, полученные из формы:
+            title=form.title.data,
+            text=form.text.data,
+            source=form.source.data
+        )
+        # Затем добавить его в сессию работы с базой данных:
+        db.session.add(opinion)
+        # И зафиксировать изменения:
+        db.session.commit()
+        # Затем переадресовать пользователя на страницу добавленного мнения:
+        return redirect(url_for('opinion_view', id=opinion.id))
+    # Если валидация не пройдена, просто отрисует форму
+    # Передаём в шаблон экземпляр формы:
+    return render_template('add_opinion.html', form=form)
 
 
 # Тут указываем конвертер пути для id:
