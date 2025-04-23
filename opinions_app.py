@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from random import randrange
 
-from flask import Flask, flash, redirect, render_template, url_for
+from flask import Flask, abort, flash, redirect, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
 # Импорты для формы
 from flask_wtf import FlaskForm
@@ -57,14 +57,36 @@ class OpinionForm(FlaskForm):
     #         raise ValidationError('Такое мнение уже существует.')
 
 
+@app.errorhandler(500)
+def internal_server_error(error):
+    # Ошибка 500 возникает в нештатных ситуациях на сервере.
+    # Например, провалилась валидация данных.
+    # В таких случаях можно откатить изменения, не зафиксированные в БД,
+    # чтобы в базу не записалось ничего лишнего.
+    db.session.rollback()
+    # Пользователю вернётся страница, сгенерированная на основе шаблона 500.html
+    # Пользователь получит код HTTP-ответа 500.
+    return render_template('500.html'), 500
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    # При ошибке 404 в качестве ответа вернётся страница, созданная
+    # на основе шаблона 404.html, и код HTTP-ответа 404.
+    return render_template('404.html'), 404
+
+
 @app.route('/')
 def index_view():
     # Определяется количество мнений в базе данных:
     quantity = Opinion.query.count()
     # Если мнений нет...
     if not quantity:
-        # ... то возвращается сообщение:
-        return 'В базе данных мнений о фильмах нет.'
+        # # ... то возвращается сообщение:
+        # return 'В базе данных мнений о фильмах нет.'
+        # Если в базе пусто, то при запросе к главной странице
+        # пользователь увидет ошибку 500:
+        abort(500)
     # Иначе выбирается случайное число в диапазоне от 0 до quantity...
     offset_value = randrange(quantity)
     # ...и определяется случайный объект:
