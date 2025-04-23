@@ -4,6 +4,7 @@ from random import randrange
 
 from flask import Flask, abort, flash, redirect, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 # Импорты для формы
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, URLField
@@ -18,6 +19,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 # приложения Flask:
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 
 class Opinion(db.Model):
@@ -33,6 +35,8 @@ class Opinion(db.Model):
     # Дата и время - текущее время,
     # по этому столбцу база данных будет проиндексирована:
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    # Новое поле
+    added_by = db.Column(db.String(64))
 
 
 # Класс формы сразу после модели Opinion.
