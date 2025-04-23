@@ -34,6 +34,37 @@
           <!-- Кнопка отправки формы -->
           {{ form.submit(class="button px-5 py-3 btn") }}
         </form>
+        <p class="py-3 mb-3">
+          <!-- Получаем только те сообщения, для которых указана категория text_message -->
+          {% with messages = get_flashed_messages(category_filter=["text-message"]) %}
+            {% if messages %}
+              {% for message in messages %}
+                {{ message }}
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </p>
+        <!-- Каегория: сообщение-->
+        <!-- <p class="py-3 mb-3">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                {{ category }}:
+                {{ message }}
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </p> -->
+        <!-- Все сообщения -->
+        <!-- <p class="py-3 mb-3">
+          {% with messages = get_flashed_messages() %}
+            {% if messages %}
+              {% for message in messages %}
+                {{ message }}
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </p> -->
       </div>
       <div class="col-12 col-lg-5">
         <img

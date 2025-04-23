@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from random import randrange
 
-from flask import Flask, redirect, render_template, url_for
+from flask import Flask, flash, redirect, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
 # Импорты для формы
 from flask_wtf import FlaskForm
@@ -51,10 +51,10 @@ class OpinionForm(FlaskForm):
     )
     submit = SubmitField('Добавить')
 
-    # Валидатор уникальности текста
-    def validate_text(self, field):
-        if Opinion.query.filter_by(text=field.data).first():
-            raise ValidationError('Такое мнение уже существует.')
+    # # Валидатор уникальности текста
+    # def validate_text(self, field):
+    #     if Opinion.query.filter_by(text=field.data).first():
+    #         raise ValidationError('Такое мнение уже существует.')
 
 
 @app.route('/')
@@ -79,6 +79,14 @@ def add_opinion_view():
     form = OpinionForm()
     # Валидация отправленной формы. Если ошибок не возникло...
     if form.validate_on_submit():
+        text = form.text.data
+        # Если в БД уже есть мнение с текстом, который ввёл пользователь...
+        if Opinion.query.filter_by(text=text).first() is not None:
+            # ...вызвать функцию flash и передать соответствующее сообщение:
+            # flash('Такое мнение уже было оставлено ранее!')
+            flash('Такое мнение уже было оставлено ранее!', 'text-message')
+            # Вернуть пользователя на страницу "Добавить мнение":
+            return render_template('add_opinion.html', form=form)
         # ... то нужно создать новый экземпляр класса Opinion:
         opinion = Opinion(
             # И передавать в него данные, полученные из формы:
