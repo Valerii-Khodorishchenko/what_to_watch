@@ -38,3 +38,13 @@ def delete_opinion(id):
     db.session.commit()
     # При удалении принято возвращать только код ответа 204:
     return '', 204
+
+
+@app.route('/api/opinions/', methods=['GET'])
+def get_opinions():
+    # Запрашивается список объектов.
+    opinions = Opinion.query.all()
+    # Поочерёдно сериализуется каждый объект,
+    # а потом все объекты помещаются в список opinions_list:
+    opinions_list = [opinion.to_dict() for opinion in opinions]
+    return jsonify({'opinions': opinions_list}), 200
