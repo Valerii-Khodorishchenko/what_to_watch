@@ -11,9 +11,9 @@ from .views import random_opinion
 # Явно разрешаем метод GET:
 @app.route('/api/opinions/<int:id>/', methods=['GET'])
 def get_opinion(id):
-    # Получаем объект по id или выбрасываем ошибку 404:
-    opinion = Opinion.query.get_or_404(id)
-    # Никаких лишних функций, просто метод to_dict():
+    opinion = Opinion.query.get(id)
+    if opinion is None:
+        raise InvalidAPIUsage('Мнение с указанным id не найдено', 404)
     return jsonify({'opinion': opinion.to_dict()}), 200
 
 
@@ -27,7 +27,9 @@ def update_opinion(id):
         raise InvalidAPIUsage('Такое мнение уже есть в базе данных')
     # Если метод get_or_404 не найдёт указанный ID,
     # то он выбросит исключение 404:
-    opinion = Opinion.query.get_or_404(id)
+    opinion = Opinion.query.get(id)
+    if opinion is None:
+        raise InvalidAPIUsage('Мнение с указанным id не найдено', 404)
     opinion.title = data.get('title', opinion.title)
     opinion.text = data.get('text', opinion.text)
     opinion.source = data.get('source', opinion.source)
@@ -42,7 +44,9 @@ def update_opinion(id):
 
 @app.route('/api/opinions/<int:id>/', methods=['DELETE'])
 def delete_opinion(id):
-    opinion = Opinion.query.get_or_404(id)
+    opinion = Opinion.query.get(id)
+    if opinion is None:
+        raise InvalidAPIUsage('Мнение с указанным id не найдено', 404)
     db.session.delete(opinion)
     db.session.commit()
     # При удалении принято возвращать только код ответа 204:
@@ -85,5 +89,6 @@ def add_opinion():
 
 @app.route('/api/get-random-opinion/', methods=['GET'])
 def geet_random_opinion():
-    opinion = random_opinion()
-    return jsonify({'opinion': opinion.to_dict()}), 200
+    if (opinion:= random_opinion()) is not None:
+        return jsonify({'opinion': opinion.to_dict()}), 200
+    raise InvalidAPIUsage('В базе данных нет мнений', 404)
