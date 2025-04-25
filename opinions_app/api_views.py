@@ -19,6 +19,13 @@ def get_opinion(id):
 @app.route('/api/opinions/<int:id>/', methods=['PATCH'])
 def update_opinion(id):
     data = request.get_json()
+    if (
+        'text' in data and
+        Opinion.query.filter_by(text=data['text']).first() is not None
+    ):
+        # При неуникальном значении поля text
+        # возвращаем сообщение об ощибке в формате JSON:
+        return jsonify({'error': 'Такое мнение уже есть в базе данных'}), 400
     # Если метод get_or_404 не найдёт указанный ID,
     # то он выбросит исключение 404:
     opinion = Opinion.query.get_or_404(id)
@@ -55,7 +62,22 @@ def get_opinions():
 @app.route('/api/opinions/', methods=['POST'])
 def add_opinion():
     # Получение данных из запроса в виде словаря:
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    # Если отсутствует тело запроса...
+    if data is None:
+        # ...то возвращаем сообщение об ошибке в формате JSON и код 400:
+        return jsonify({'error': 'В запросе нет данных'}), 400
+    # Если в запросе нет обязательных полей...
+    if 'title' not in data or 'text' not in data:
+        # ...то возвращаем сообщение об ошибке в формате JSON и код 400:
+        return jsonify(
+            {'error': 'В запросе отсутствуют обязательные поля'}
+        ), 400
+    # Если в базе данных уже есть объект
+    # с таким же значением поля text...
+    if Opinion.query.filter_by(text=data['text']).first() is not None:
+        # ...возвращаем сообщение об ошибке в формате JSON и код 400:
+        return jsonify({'error': 'Такое мнение уже есть в базе данных'}), 400
     # Создание нового пустого экземпляра модели:
     opinion = Opinion()
     # Наполнение экземпляра данными из запроса:
