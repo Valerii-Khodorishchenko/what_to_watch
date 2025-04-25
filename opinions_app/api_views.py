@@ -3,6 +3,7 @@ from random import randrange
 from flask import jsonify, request
 
 from . import app, db
+from .error_handlers import InvalidAPIUsage
 from .models import Opinion
 from .views import random_opinion
 
@@ -23,9 +24,7 @@ def update_opinion(id):
         'text' in data and
         Opinion.query.filter_by(text=data['text']).first() is not None
     ):
-        # При неуникальном значении поля text
-        # возвращаем сообщение об ощибке в формате JSON:
-        return jsonify({'error': 'Такое мнение уже есть в базе данных'}), 400
+        raise InvalidAPIUsage('Такое мнение уже есть в базе данных')
     # Если метод get_or_404 не найдёт указанный ID,
     # то он выбросит исключение 404:
     opinion = Opinion.query.get_or_404(id)
@@ -63,21 +62,16 @@ def get_opinions():
 def add_opinion():
     # Получение данных из запроса в виде словаря:
     data = request.get_json(silent=True)
-    # Если отсутствует тело запроса...
     if data is None:
-        # ...то возвращаем сообщение об ошибке в формате JSON и код 400:
-        return jsonify({'error': 'В запросе нет данных'}), 400
+        # Выбрасываем собственное исключение.
+        # Второй параметр (статус-код) в этом обработчике можно не передовать:
+        # нужно вернуть код 400, а он и так возвращается по умолчанию.
+        raise InvalidAPIUsage('В запросе нет данных')
     # Если в запросе нет обязательных полей...
     if 'title' not in data or 'text' not in data:
-        # ...то возвращаем сообщение об ошибке в формате JSON и код 400:
-        return jsonify(
-            {'error': 'В запросе отсутствуют обязательные поля'}
-        ), 400
-    # Если в базе данных уже есть объект
-    # с таким же значением поля text...
+        raise InvalidAPIUsage('В запросе отсутствуют обязательные поля')
     if Opinion.query.filter_by(text=data['text']).first() is not None:
-        # ...возвращаем сообщение об ошибке в формате JSON и код 400:
-        return jsonify({'error': 'Такое мнение уже есть в базе данных'}), 400
+        raise InvalidAPIUsage('Такое мнение уже есть в базе данных')
     # Создание нового пустого экземпляра модели:
     opinion = Opinion()
     # Наполнение экземпляра данными из запроса:
